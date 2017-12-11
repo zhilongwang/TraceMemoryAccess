@@ -1,14 +1,26 @@
 # TraceMemoryAccess
 
-### 1. Angr highly recommend using a python virtual environment to install and use angr. 
-  #virtualenv
+### 1. Compile and run pintool. 
+  #### Compiling
  
   ```bash
-  (sudo) pip install virtualenv
+  mv TraceMemoryAccess.cpp to pin-packet/source/tool/MyPinTool/TraceMemoryAccess.cpp
+  mkdir obj-ia32
+  make obj-ia32/TraceMemoryAccess.so TARGET=ia32
   ```
 
-  #virtualenvwrapper
+  #### log memory access in a program
   ```Bash
-  (sudo) pip install virtualenvwrapper
+  ../../../pin -t obj-ia32/TraceMemoryAccess.so -- ./demoprogram
   ```
-
+  #### output
+  inst0:memory access ins code
+  memtrace0: memory access tag(heap, stack, global) of ins
+  maps0: address regin of heap, stack and global data
+  
+### 1. Run data set.
+   #### data set
+   https://github.com/njuwangzhilong/TraceMemoryAccess/blob/master/DataSet-Programs%20to%20run/testcases.xlsx
+   
+   #### result
+   https://github.com/njuwangzhilong/TraceMemoryAccess/blob/master/results
