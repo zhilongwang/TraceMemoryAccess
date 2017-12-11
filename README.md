@@ -14,9 +14,9 @@
   ../../../pin -t obj-ia32/TraceMemoryAccess.so -- ./demoprogram
   ```
   #### output
-  inst0:memory access ins code
-  memtrace0: memory access tag(heap, stack, global) of ins
-  maps0: address regin of heap, stack and global data
+  inst0:memory access ins code   
+  memtrace0: memory access tag(heap, stack, global) of ins   
+  maps0: address regin of heap, stack and global data   
   
 ### 1. Run data set.
    #### data set
