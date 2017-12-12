@@ -1,4 +1,3 @@
-
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
@@ -42,11 +41,13 @@ FILE * inst;
 FILE * maps;
 
 UINT32 inscount = 0;
+bool outflag=false;
+
 
 #define THRESHOLD 3110000
 
 #define LEN_ADDR 8
-
+const string routine_name="main";
 typedef enum region_type {
     GLOBAL = 0,
     HEAP,
@@ -122,7 +123,9 @@ VOID RecordMem(VOID * ip, VOID * addr)
 }
 
 VOID LogInst(VOID * ip, UINT32 size, UINT32 num,VOID * addr) {
-
+    if(outflag==false){
+        return;
+    }
     inscount++;
 
     //fprintf(inst, "%p;%d;", ip, size);
@@ -168,10 +171,32 @@ VOID LogInst(VOID * ip, UINT32 size, UINT32 num,VOID * addr) {
     }
 }
 
+VOID  begintrace()
+{   
+        outflag=true;
+}
+VOID  endtrace()
+{   
+        outflag=false;
+}
 // Is called for every instruction and instruments reads and writes
-VOID Instruction(INS ins, VOID *v)
+VOID RTNInstrumentation(RTN rtn, VOID *v)
 {
-    if(INS_IsMemoryWrite(ins)||INS_IsMemoryRead(ins)){
+    RTN_Open(rtn);
+
+    string name=RTN_Name(rtn);
+    if(routine_name.compare(name)==0){
+        INS InsHead=RTN_InsHead(rtn);
+        INS InsTail=RTN_InsTail(rtn);
+        if(INS_Valid(InsHead))
+            INS_InsertPredicatedCall(InsHead, IPOINT_BEFORE, AFUNPTR(begintrace),IARG_END);
+        if(INS_Valid(InsTail))
+            INS_InsertPredicatedCall(InsTail, IPOINT_BEFORE, AFUNPTR(endtrace),IARG_END);
+         
+    }
+    for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins)){
+        
+            if(INS_IsMemoryWrite(ins)||INS_IsMemoryRead(ins)){
             UINT32 memOperands = INS_MemoryOperandCount(ins);
             UINT32 memOp=0;
             for (memOp = 0; memOp < memOperands; memOp++)
@@ -180,43 +205,16 @@ VOID Instruction(INS ins, VOID *v)
                     break;
                 }
             }
+            
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)LogInst, 
                 IARG_INST_PTR,
                 IARG_UINT32, INS_Size(ins),
                 IARG_UINT32, memOperands,
                 IARG_MEMORYOP_EA, memOp,
                 IARG_END);
-            /*for (UINT32 memOp = 0; memOp < memOperands; memOp++)
-            {
-                INS_InsertCall(
-                    ins, IPOINT_BEFORE, (AFUNPTR)RecordMem,
-                    IARG_INST_PTR, 
-                    IARG_MEMORYOP_EA, memOp,
-                    IARG_END);
-            }*/
+            }
     }
-
-
-    // Iterate over each memory operand of the instruction.
-    
-	/*
-        if (INS_MemoryOperandIsRead(ins, memOp))
-        {
-            INS_InsertPredicatedCall(
-                ins, IPOINT_BEFORE, (AFUNPTR)RecordMemRead,
-                IARG_MEMORYOP_EA, memOp,
-                IARG_END);
-        }
-        // Note that in some architectures a single memory operand can be 
-        // both read and written (for instance incl (%eax) on IA-32)
-        // In that case we instrument it once for read and once for write.
-        if (INS_MemoryOperandIsWritten(ins, memOp))
-        {
-            INS_InsertPredicatedCall(
-                ins, IPOINT_BEFORE, (AFUNPTR)RecordMemWrite,
-                IARG_MEMORYOP_EA, memOp,
-                IARG_END);
-        }*/
+    RTN_Close(rtn);
     
 }
 
@@ -244,13 +242,15 @@ INT32 Usage()
 
 int main(int argc, char *argv[])
 {
+    PIN_InitSymbols();
     if (PIN_Init(argc, argv)) return Usage();
 
     trace = fopen("memtrace0", "w");
     inst = fopen("inst0", "w");
     maps = fopen("maps0", "w");
     get_region_info();
-    INS_AddInstrumentFunction(Instruction, 0);
+    //INS_AddInstrumentFunction(Instruction, 0);
+    RTN_AddInstrumentFunction(RTNInstrumentation, 0);
     PIN_AddFiniFunction(Fini, 0);
 
     // Never returns
