@@ -1,6 +1,9 @@
 # TraceMemoryAccess
-
-### 1. Compile and run pintool. 
+### 1. Introduction.
+    This pintool trace all the memory access operation and log regins(heap,stack,data section) of operands.
+    
+    
+### 2. Compile and run pintool. 
   #### Compiling
  
   ```bash
@@ -18,7 +21,7 @@
   memtrace0: memory access tag(heap, stack, global) of ins   
   maps0: address regin of heap, stack and global data   
   
-### 1. Run data set.
+### 3. Run data set.
    #### data set
    https://github.com/njuwangzhilong/TraceMemoryAccess/blob/master/DataSet-Programs%20to%20run/testcases.xlsx
    
