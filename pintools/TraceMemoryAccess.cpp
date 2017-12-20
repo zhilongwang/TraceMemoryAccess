@@ -41,7 +41,7 @@ FILE * inst;
 FILE * maps;
 
 UINT32 inscount = 0;
-bool outflag=false;
+bool outflag=true;
 
 
 #define THRESHOLD 3110000
@@ -189,7 +189,11 @@ VOID RTNInstrumentation(RTN rtn, VOID *v)
         INS InsHead=RTN_InsHead(rtn);
         INS InsTail=RTN_InsTail(rtn);
         if(INS_Valid(InsHead))
+        {
+            outflag=false;
             INS_InsertPredicatedCall(InsHead, IPOINT_BEFORE, AFUNPTR(begintrace),IARG_END);
+        }
+            
         if(INS_Valid(InsTail))
             INS_InsertPredicatedCall(InsTail, IPOINT_BEFORE, AFUNPTR(endtrace),IARG_END);
          
